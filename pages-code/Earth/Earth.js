@@ -453,7 +453,7 @@ function MyMaterial() {
         `#include <project_vertex>`,
         /* glsl */ `
 
-        // float seed = 0.5;
+        // float seed = 0.5 + time;
         // vec3 dis = normal * vec3(
         //   1.0 * seedPattern(2.0 * normal.xx * density + -colorSatuation * cos(seed * 0.05), seed),
         //   1.0 * seedPattern(2.0 * normal.yy * density +  0.0 * cos(seed * 0.05), seed),
@@ -461,7 +461,7 @@ function MyMaterial() {
         // );
         // transformed += dis;
 
-        transformed += height * 0.5;
+        transformed += height * 1.5 * seedPattern(vec2(length(height)), 0.5);
 
         vHeight = height;
 
