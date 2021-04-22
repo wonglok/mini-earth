@@ -16,7 +16,10 @@ import { MapControls } from "three/examples/jsm/controls/OrbitControls";
 import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
 import { HDR } from "../HDR/HDR";
 
-export function Earth() {
+// import { AnimationMixer, MeshStandardMaterial, Vector2, Vector3 } from "three";
+// import { useControls } from "leva";
+
+export function EarthBackup() {
   return (
     <Canvas>
       <ambientLight></ambientLight>
@@ -31,9 +34,6 @@ export function Earth() {
     </Canvas>
   );
 }
-
-// import { AnimationMixer, MeshStandardMaterial, Vector2, Vector3 } from "three";
-// import { useControls } from "leva";
 
 function CamControls() {
   let { gl, camera, scene } = useThree();
@@ -239,38 +239,32 @@ export function makeGeo() {
         .copy(normal);
 
       for (let j = 0; j < 5; j++) {
-        noise.x = Math.abs(
-          Math.sin(
-            improvedNoise.noise(
-              normal.x * perlin,
-              normal.x * perlin,
-              normal.x * perlin
-            )
+        noise.x = Math.sin(
+          improvedNoise.noise(
+            normal.x * perlin,
+            normal.x * perlin,
+            normal.x * perlin
           )
         );
-        noise.y = Math.abs(
-          Math.sin(
-            improvedNoise.noise(
-              normal.y * perlin,
-              normal.y * perlin,
-              normal.y * perlin
-            )
+        noise.y = Math.sin(
+          improvedNoise.noise(
+            normal.y * perlin,
+            normal.y * perlin,
+            normal.y * perlin
           )
         );
-        noise.z = Math.abs(
-          Math.sin(
-            improvedNoise.noise(
-              normal.z * perlin,
-              normal.z * perlin,
-              normal.z * perlin
-            )
+        noise.z = Math.sin(
+          improvedNoise.noise(
+            normal.z * perlin,
+            normal.z * perlin,
+            normal.z * perlin
           )
         );
 
         height.multiply(noise).multiplyScalar(0.9);
       }
 
-      height.multiplyScalar(3);
+      height.multiplyScalar(-2);
 
       //
       heightData.push(
@@ -350,8 +344,8 @@ function MyMaterial() {
   const time = useRef({ value: 0 });
   const nodeRef = useRef(false);
   const uicontrols = useControls({
-    river: "#0e6693",
-    hill: "#3bff89",
+    river: "#1e65c1",
+    hill: "#ff7c00",
   });
 
   window.dispatchEvent(new CustomEvent("uicontrols", { detail: uicontrols }));
@@ -497,24 +491,30 @@ function MyMaterial() {
         `gl_FragColor = vec4( outgoingLight, diffuseColor.a );`,
         /* glsl */ `
 
+        // outgoingLight += mix(outgoingLight, vec3(
+        //   pattern(gl_FragCoord.xx * density + -colorSatuation * cos(time * 0.05)),
+        //   pattern(gl_FragCoord.yy * density +  0.0 * cos(time * 0.05)),
+        //   pattern(gl_FragCoord.zz * density +  colorSatuation * cos(time * 0.05))
+        // ), 0.0);
+
+
+
         // River
         if (length(vHeight) < length(vNormal)) {
-          outgoingLight.r += 0.00001 / length((vHeight));
-          outgoingLight.g += 0.00001 / length((vHeight));
-          outgoingLight.b += 0.00001 / length((vHeight));
+          outgoingLight.r += 0.0001 / length((vHeight));
+          outgoingLight.g += 0.0001 / length((vHeight));
+          outgoingLight.b += 0.0001 / length((vHeight));
         }
 
         outgoingLight.r += hillColor.r * (0.0 - length(vHeight));
         outgoingLight.g += hillColor.g * (0.0 - length(vHeight));
         outgoingLight.b += hillColor.b * (0.0 - length(vHeight));
 
-        outgoingLight.rgb -= length(vHeight) * 1.25 * (0.8 - hillColor.rgb);
+        outgoingLight.rgb -= length(vHeight) * 1.5 * (1.0 - hillColor.rgb);
 
 
         if (avg3(outgoingLight.rgb) > 0.9) {
           outgoingLight.rgb = riverColor;
-        } else {
-
         }
 
         // outgoingLight.rgb += (riverColor) * length(vHeight);
