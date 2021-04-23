@@ -16,6 +16,7 @@
     "implicit-mesh": "^1.1.1",
     "leva": "^0.9.8",
     "next": "10.x",
+    "raw-loader": "^4.0.2",
     "react": "17.x",
     "react-dom": "17.x",
     "simplex-noise": "^2.4.0",

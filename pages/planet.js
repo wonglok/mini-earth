@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useEffect } from "react";
 // import styles from "../styles/Home.module.css";
 
 // export default function Home() {
@@ -14,6 +15,8 @@ import Head from "next/head";
 //   );
 // }
 
+import { Planet } from "../pages-code/Planet/Planet";
+
 export default function App() {
   // useEffect(() => {
   //   if (typeof window !== "undefined") {
@@ -23,12 +26,7 @@ export default function App() {
   // });
   return (
     <div className={"h-full"}>
-      <a className={"inline-block p-3 m-2 border"} href="/planet">
-        Planet
-      </a>
-      <a className={"inline-block p-3 m-2 border"} href="/earth">
-        Earth
-      </a>
+      <Planet></Planet>
     </div>
   );
 }

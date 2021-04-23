@@ -56,6 +56,8 @@ function CamControls() {
   };
 
   useEffect(() => {
+    //
+    //
     camera.position.copy({
       x: 0,
       y: 100,
@@ -511,10 +513,8 @@ function MyMaterial() {
         outgoingLight.rgb -= length(vHeight) * 1.25 * (0.8 - hillColor.rgb);
 
 
-        if (avg3(outgoingLight.rgb) > 0.9) {
+        if (avg3(outgoingLight.rgb) > 0.8) {
           outgoingLight.rgb = riverColor;
-        } else {
-
         }
 
         // outgoingLight.rgb += (riverColor) * length(vHeight);
