@@ -37,11 +37,10 @@ export function Planet() {
 function makeGeo({ seed }) {
   let SimplexNoise = require("simplex-noise");
   var simplex = new SimplexNoise(seed);
-  var simplex2 = new SimplexNoise(seed + 1);
 
-  let radius = 6,
-    widthSegments = 70,
-    heightSegments = 70,
+  let radius = 6.5,
+    widthSegments = 100,
+    heightSegments = 100,
     phiStart = 0,
     phiLength = Math.PI * 2,
     thetaStart = 0,
@@ -61,7 +60,6 @@ function makeGeo({ seed }) {
 
   const indices = [];
   const vertices = [];
-  const colorData = [];
   const altitude = [];
   const normals = [];
   const uvs = [];
@@ -107,7 +105,7 @@ function makeGeo({ seed }) {
       normals.push(normal.x, normal.y, normal.z);
 
       let addon =
-        1.5 + 0.54 * Math.sin(simplex.noise3D(normal.x, normal.y, normal.z));
+        1.5 + 0.5 * Math.sin(simplex.noise3D(normal.x, normal.y, normal.z));
 
       let perlin = simplex.noise3D(
         addon * normal.x,
@@ -115,14 +113,19 @@ function makeGeo({ seed }) {
         addon * normal.z
       );
 
-      perlin = perlin * 0.7;
+      perlin = perlin * 0.16;
 
-      if (perlin >= 0.25) {
-        perlin = 0.25;
+      // make land flat
+      if (perlin >= 0.045) {
+        perlin = 0.045;
       }
-      if (perlin <= -0.25) {
-        perlin = -0.25;
+
+      // make sea
+      if (perlin <= -0.04) {
+        perlin = -0.04;
       }
+
+      perlin = perlin * radius;
 
       altitude.push(perlin);
 
@@ -155,8 +158,6 @@ function makeGeo({ seed }) {
   buff.setIndex(indices);
 
   buff.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
-  // buff.setAttribute("height", new Float32BufferAttribute(heightData, 3));
-  buff.setAttribute("color", new Float32BufferAttribute(colorData, 3));
   buff.setAttribute("position", new Float32BufferAttribute(vertices, 3));
   buff.setAttribute("normal", new Float32BufferAttribute(normals, 3));
   buff.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
@@ -165,9 +166,6 @@ function makeGeo({ seed }) {
   let buffSea = new BufferGeometry();
   buffSea.setIndex(indices);
 
-  // buffSea.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
-  // buffSea.setAttribute("height", new Float32BufferAttribute(heightData, 3));
-  buffSea.setAttribute("color", new Float32BufferAttribute(colorData, 3));
   buffSea.setAttribute("position", new Float32BufferAttribute(vertices, 3));
   buffSea.setAttribute("normal", new Float32BufferAttribute(normals, 3));
   buffSea.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
