@@ -238,6 +238,7 @@ function makeMat({ params }) {
   let fs = require("!raw-loader!./glsl/planet.frag").default;
 
   let mat = new ShaderMaterial({
+    transparent: true,
     uniforms: {
       hillColor: { value: new Color(params.hillColor) },
       seaColor: { value: new Color(params.seaColor) },
@@ -261,6 +262,10 @@ function makeMat({ params }) {
 
 export function FunGeo() {
   let { gl, camera, scene, waitFor, onClean, onLoop } = useTools();
+
+  camera.near = 0.1;
+  camera.far = 10000;
+  camera.updateProjectionMatrix();
 
   let waternormals = useTexture("/textures/waternormals.jpg");
   let params = useControls({
