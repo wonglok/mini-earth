@@ -10,7 +10,10 @@ let {
     onClean,
     onLoop,
   } = useTools()
-*/
+
+  let { gl, camera, scene, waitFor, onClean, onLoop } = useTools();
+
+  */
 export function useTools() {
   let { scene, gl, camera } = useThree();
   let waitFor = (name, node = scene) => {

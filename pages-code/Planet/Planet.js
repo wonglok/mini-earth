@@ -6,17 +6,17 @@ import {
   BufferGeometry,
   Color,
   Float32BufferAttribute,
-  MultiplyBlending,
-  RepeatWrapping,
+  // MultiplyBlending,
+  // RepeatWrapping,
   ShaderMaterial,
   TextureLoader,
   Vector3,
 } from "three";
-import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
+// import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
 import { Floor } from "../Floor/Floor";
 import { HDR } from "../HDR/HDR";
 import { MapCam } from "../MapCam/MapCam";
-import { Water } from "three/examples/jsm/objects/Water.js";
+// import { Water } from "three/examples/jsm/objects/Water.js";
 import { useTools } from "../useTools/useTools";
 import { useTexture } from "@react-three/drei";
 
@@ -37,10 +37,11 @@ export function Planet() {
 function makeGeo({ seed }) {
   let SimplexNoise = require("simplex-noise");
   var simplex = new SimplexNoise(seed);
+  var simplex2 = new SimplexNoise(seed + 1);
 
-  let radius = 4,
-    widthSegments = 360,
-    heightSegments = 360,
+  let radius = 6,
+    widthSegments = 70,
+    heightSegments = 70,
     phiStart = 0,
     phiLength = Math.PI * 2,
     thetaStart = 0,
@@ -55,21 +56,15 @@ function makeGeo({ seed }) {
 
   const vertex = new Vector3();
   const normal = new Vector3();
-  const height = new Vector3();
-  const noise = new Vector3();
-  const altitudeTemp = new Vector3();
 
   // buffers
 
   const indices = [];
   const vertices = [];
   const colorData = [];
-  const heightData = [];
   const altitude = [];
   const normals = [];
   const uvs = [];
-
-  let improvedNoise = new ImprovedNoise();
 
   // generate vertices, normals and uvs
 
@@ -108,78 +103,30 @@ function makeGeo({ seed }) {
 
       normal.copy(vertex);
       normal.normalize();
-
-      let perlin =
-        simplex.noise3D(2.0 * normal.x, 2.0 * normal.y, 2.0 * normal.z) * 1.5;
-
-      noise.multiplyScalar(0);
-      height
-        // .copy(vertex)
-        .copy(normal);
-
-      for (let j = 0; j < 5; j++) {
-        noise.x = Math.cos(
-          Math.sin(
-            improvedNoise.noise(
-              normal.x * perlin,
-              normal.x * perlin,
-              normal.x * perlin
-            )
-          )
-        );
-        noise.y = Math.cos(
-          Math.sin(
-            improvedNoise.noise(
-              normal.y * perlin,
-              normal.y * perlin,
-              normal.y * perlin
-            )
-          )
-        );
-        noise.z = Math.cos(
-          Math.sin(
-            improvedNoise.noise(
-              normal.z * perlin,
-              normal.z * perlin,
-              normal.z * perlin
-            )
-          )
-        );
-
-        height.multiply(noise).multiplyScalar(1.1);
-      }
-
-      height.multiplyScalar(2);
-
-      //
-      heightData.push(
-        //Math.abs
-        height.x,
-        //Math.abs
-        height.y,
-        //Math.abs
-        height.z
-      );
-
-      let altitudeOne = 1;
-      for (let j = 0; j < 5; j++) {
-        altitudeOne +=
-          height.normalize().sub(vertex.normalize()).length() - noise.length();
-      }
-      altitudeOne *= 0.1;
-      if (altitudeOne >= 0.9) {
-        altitudeOne = 0.9;
-      }
-
-      altitude.push(altitudeOne);
-
-      colorData.push(height.x, height.y, height.z);
-
       // normal
       normals.push(normal.x, normal.y, normal.z);
 
-      // uv
+      let addon =
+        1.5 + 0.54 * Math.sin(simplex.noise3D(normal.x, normal.y, normal.z));
 
+      let perlin = simplex.noise3D(
+        addon * normal.x,
+        addon * normal.y,
+        addon * normal.z
+      );
+
+      perlin = perlin * 0.7;
+
+      if (perlin >= 0.25) {
+        perlin = 0.25;
+      }
+      if (perlin <= -0.25) {
+        perlin = -0.25;
+      }
+
+      altitude.push(perlin);
+
+      // uv
       uvs.push(u + uOffset, 1 - v);
 
       verticesRow.push(index++);
@@ -208,7 +155,7 @@ function makeGeo({ seed }) {
   buff.setIndex(indices);
 
   buff.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
-  buff.setAttribute("height", new Float32BufferAttribute(heightData, 3));
+  // buff.setAttribute("height", new Float32BufferAttribute(heightData, 3));
   buff.setAttribute("color", new Float32BufferAttribute(colorData, 3));
   buff.setAttribute("position", new Float32BufferAttribute(vertices, 3));
   buff.setAttribute("normal", new Float32BufferAttribute(normals, 3));
@@ -231,7 +178,6 @@ function makeGeo({ seed }) {
   };
 }
 
-let tt = 0;
 let cache = new Map();
 function makeMat({ params }) {
   let vs = require("!raw-loader!./glsl/planet.vert").default;
@@ -264,13 +210,13 @@ export function FunGeo() {
   let { gl, camera, scene, waitFor, onClean, onLoop } = useTools();
 
   camera.near = 0.1;
-  camera.far = 10000;
+  camera.far = 100000;
   camera.updateProjectionMatrix();
 
   let waternormals = useTexture("/textures/waternormals.jpg");
   let params = useControls({
-    hillColor: "#5f7927",
-    seaColor: "#2f4f87",
+    hillColor: "#526c1c",
+    seaColor: "#194665",
     seed: 1,
   });
 
@@ -289,31 +235,8 @@ export function FunGeo() {
     }
   });
 
-  // useEffect(() => {
-  //   let obj = new Water(sea, {
-  //     textureWidth: 256,
-  //     textureHeight: 256,
-  //     waterNormals: new TextureLoader().load(
-  //       "/textures/waternormals.jpg",
-  //       (texture) => {
-  //         texture.wrapS = texture.wrapT = RepeatWrapping;
-  //       }
-  //     ),
-  //     sunDirection: new Vector3(),
-  //     sunColor: 0xffffff,
-  //     waterColor: 0x001e0f,
-  //     distortionScale: 1.7,
-  //     fog: false,
-  //   });
-
-  //   fun.current.add(obj);
-
-  //   return () => {};
-  // }, []);
-
   return (
-    <group scale={1.5} ref={fun}>
-      {/*  */}
+    <group ref={fun}>
       <mesh geometry={hill} material={mat}></mesh>
       <mesh geometry={sea} rotation-x={0.6 * 0.5 * Math.PI}>
         <meshStandardMaterial
