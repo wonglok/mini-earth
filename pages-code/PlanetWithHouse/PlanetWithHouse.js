@@ -1,9 +1,8 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import {
   AdditiveBlending,
-  AnimationMixer,
   BufferGeometry,
   Color,
   Float32BufferAttribute,
@@ -19,9 +18,9 @@ import { HDR } from "../HDR/HDR";
 import { MapCam } from "../MapCam/MapCam";
 // import { Water } from "three/examples/jsm/objects/Water.js";
 import { useTools } from "../useTools/useTools";
-import { useAnimations, useFBX, useGLTF, useTexture } from "@react-three/drei";
-import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils";
-export function Planet() {
+import { useTexture } from "@react-three/drei";
+
+export function PlanetWithHouse() {
   return (
     <Canvas>
       <ambientLight></ambientLight>
@@ -40,8 +39,8 @@ function makeGeo({ seed }) {
   var simplex = new SimplexNoise(seed);
 
   let radius = 6.5,
-    widthSegments = 75,
-    heightSegments = 75,
+    widthSegments = 100,
+    heightSegments = 100,
     phiStart = 0,
     phiLength = Math.PI * 2,
     thetaStart = 0,
@@ -61,11 +60,9 @@ function makeGeo({ seed }) {
 
   const indices = [];
   const vertices = [];
-  const earthVert = [];
   const altitude = [];
   const normals = [];
   const uvs = [];
-  const rayData = [];
 
   // generate vertices, normals and uvs
 
@@ -100,20 +97,15 @@ function makeGeo({ seed }) {
         Math.sin(phiStart + u * phiLength) *
         Math.sin(thetaStart + v * thetaLength);
 
+      vertices.push(vertex.x, vertex.y, vertex.z);
+
       normal.copy(vertex);
       normal.normalize();
       // normal
       normals.push(normal.x, normal.y, normal.z);
 
       let addon =
-        1.5 +
-        ((0.5 *
-          simplex.noise3D(
-            (1 / radius) * vertex.x,
-            (1 / radius) * vertex.y,
-            (1 / radius) * vertex.z
-          )) %
-          1);
+        1.5 + 0.5 * Math.sin(simplex.noise3D(normal.x, normal.y, normal.z));
 
       let perlin = simplex.noise3D(
         addon * normal.x,
@@ -136,19 +128,6 @@ function makeGeo({ seed }) {
       perlin = perlin * radius;
 
       altitude.push(perlin);
-
-      vertices.push(vertex.x, vertex.y, vertex.z);
-
-      let perlinRay = perlin;
-      if (perlinRay <= 0) {
-        perlinRay = 0;
-      }
-
-      let rayPt = vertex.clone().add(normal.clone().multiplyScalar(perlinRay));
-      rayData.push(rayPt.x, rayPt.y, rayPt.z);
-
-      let earth = vertex.clone().add(normal.clone().multiplyScalar(perlin));
-      earthVert.push(earth.x, earth.y, earth.z);
 
       // uv
       uvs.push(u + uOffset, 1 - v);
@@ -175,14 +154,13 @@ function makeGeo({ seed }) {
   }
 
   // build geometry
-  let buffEarth = new BufferGeometry();
-  buffEarth.setIndex(indices);
+  let buff = new BufferGeometry();
+  buff.setIndex(indices);
 
-  buffEarth.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
-  buffEarth.setAttribute("position", new Float32BufferAttribute(rayData, 3));
-  buffEarth.setAttribute("earth", new Float32BufferAttribute(earthVert, 3));
-  buffEarth.setAttribute("normal", new Float32BufferAttribute(normals, 3));
-  buffEarth.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  buff.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
+  buff.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+  buff.setAttribute("normal", new Float32BufferAttribute(normals, 3));
+  buff.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
 
   // build geometry
   let buffSea = new BufferGeometry();
@@ -193,7 +171,7 @@ function makeGeo({ seed }) {
   buffSea.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
 
   return {
-    hill: buffEarth,
+    hill: buff,
     sea: buffSea,
   };
 }
@@ -226,65 +204,14 @@ function makeMat({ params }) {
   return mat;
 }
 
-export const getID = function () {
-  return (
-    "_" +
-    Math.random().toString(36).substr(2, 9) +
-    Math.random().toString(36).substr(2, 9)
-  );
-};
-
-export function Metalman({ lookAt }) {
-  let ref = useRef();
-  let metalman = useGLTF("/avatar/metalman.glb");
-  let mixer = useRef(new AnimationMixer());
-  let newman = useMemo(() => {
-    return SkeletonUtils.clone(metalman.scene);
-  }, []);
-  let action = useFBX("/avatar/idle.fbx");
-  useEffect(() => {
-    let idleAct = mixer.current.clipAction(action.animations[0], newman);
-    idleAct.play();
-
-    if (ref.current) {
-      ref.current.lookAt(...lookAt);
-    }
-
-    return () => {
-      mixer.current.uncacheRoot(newman);
-    };
-  }, []);
-
-  useFrame((state, dt) => {
-    if (mixer.current) {
-      mixer.current.update(dt);
-    }
-  });
-
-  return (
-    <group ref={ref}>
-      <primitive
-        scale={0.005}
-        rotation-x={Math.PI * -0.5}
-        object={newman}
-      ></primitive>
-    </group>
-  );
-}
-
 export function FunGeo() {
-  const helper = useRef();
-  const helper2 = useRef();
   let { gl, camera, scene, waitFor, onClean, onLoop } = useTools();
-
-  const [items, setItems] = useState([]);
 
   camera.near = 0.1;
   camera.far = 100000;
   camera.updateProjectionMatrix();
 
   let waternormals = useTexture("/textures/waternormals.jpg");
-
   let params = useControls({
     hillColor: "#526c1c",
     seaColor: "#194665",
@@ -306,70 +233,20 @@ export function FunGeo() {
     }
   });
 
-  useEffect(() => {
-    if (!helper.current.geometry.rotationFix) {
-      helper.current.geometry.rotationFix = true;
-      helper.current.geometry.translate(0, -0.2 * 3 * 0.5, 0);
-      helper.current.geometry.rotateX(0.5 * Math.PI);
-    }
-  }, []);
-
-  let tempWorldPos = new Vector3();
   return (
-    <group>
-      <mesh ref={helper}>
-        <coneBufferGeometry args={[0.1 * 3, 0.2 * 3, 32]}></coneBufferGeometry>
-        <meshNormalMaterial></meshNormalMaterial>
+    <group ref={fun}>
+      <mesh geometry={hill} material={mat}></mesh>
+      <mesh geometry={sea} rotation-x={0.6 * 0.5 * Math.PI}>
+        <meshStandardMaterial
+          opacity={0.9}
+          normalMap={waternormals}
+          metalness={0.7}
+          roughness={0.0}
+          transparent={true}
+          blending={AdditiveBlending}
+          color={params.seaColor}
+        ></meshStandardMaterial>
       </mesh>
-
-      <group ref={fun}>
-        {items.map((i) => {
-          return (
-            <group key={i._id} position={i.position}>
-              <Metalman lookAt={i.lookAt}></Metalman>
-            </group>
-          );
-        })}
-        <mesh
-          onPointerMove={(e) => {
-            fun.current.getWorldPosition(tempWorldPos);
-
-            helper.current.position.copy(e.point);
-            helper.current.lookAt(tempWorldPos);
-
-            // metalman.scene.position.copy(e.point);
-            // metalman.scene.lookAt(tempWorldPos);
-          }}
-          onClick={(e) => {
-            setItems((s) => {
-              fun.current.getWorldPosition(tempWorldPos);
-
-              helper.current.position.copy(e.point);
-              helper.current.lookAt(tempWorldPos);
-
-              s.push({
-                _id: getID(),
-                position: e.object.worldToLocal(e.point.clone()).toArray(),
-                lookAt: tempWorldPos.clone(0).toArray(),
-              });
-              return [...s];
-            });
-          }}
-          geometry={hill}
-          material={mat}
-        ></mesh>
-        <mesh geometry={sea} rotation-x={0.6 * 0.5 * Math.PI}>
-          <meshStandardMaterial
-            opacity={0.9}
-            normalMap={waternormals}
-            metalness={0.7}
-            roughness={0.0}
-            transparent={true}
-            blending={AdditiveBlending}
-            color={params.seaColor}
-          ></meshStandardMaterial>
-        </mesh>
-      </group>
     </group>
   );
 }
