@@ -241,6 +241,7 @@ export function Metalman({ lookAt }) {
   let newman = useMemo(() => {
     let man = SkeletonUtils.clone(metalman.scene);
     man.rotation.x = Math.PI * -0.5;
+    man.visible = false;
     return man;
   }, []);
   let action = useFBX("/avatar/idle.fbx");
@@ -260,6 +261,7 @@ export function Metalman({ lookAt }) {
   useFrame((state, dt) => {
     if (mixer.current) {
       mixer.current.update(dt);
+      newman.visible = true;
     }
   });
 
@@ -332,6 +334,7 @@ export function FunGeo() {
             </group>
           );
         })}
+
         <mesh
           onPointerMove={(e) => {
             fun.current.getWorldPosition(tempWorldPos);
