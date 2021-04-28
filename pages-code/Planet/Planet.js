@@ -330,7 +330,9 @@ export function FunGeo() {
         {items.map((i) => {
           return (
             <group key={i._id} position={i.position}>
-              <Metalman lookAt={i.lookAt}></Metalman>
+              <Suspense fallback={null}>
+                <Metalman lookAt={i.lookAt}></Metalman>
+              </Suspense>
             </group>
           );
         })}
