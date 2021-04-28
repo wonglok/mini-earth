@@ -239,7 +239,9 @@ export function Metalman({ lookAt }) {
   let metalman = useGLTF("/avatar/metalman.glb");
   let mixer = useRef(new AnimationMixer());
   let newman = useMemo(() => {
-    return SkeletonUtils.clone(metalman.scene);
+    let man = SkeletonUtils.clone(metalman.scene);
+    man.rotation.x = Math.PI * -0.5;
+    return man;
   }, []);
   let action = useFBX("/avatar/idle.fbx");
   useEffect(() => {
@@ -265,7 +267,7 @@ export function Metalman({ lookAt }) {
     <group ref={ref}>
       <primitive
         scale={0.005}
-        rotation-x={Math.PI * -0.5}
+        // rotation-x={}
         object={newman}
       ></primitive>
     </group>
