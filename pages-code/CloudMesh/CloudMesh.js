@@ -3,6 +3,13 @@ import { CloudBufferGeo } from "./CloudBufferGeo";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils";
 import { Geometry } from "three/examples/jsm/deprecated/Geometry";
 import { useFrame } from "@react-three/fiber";
+import { Cloud, useTexture } from "@react-three/drei";
+import {
+  AdditiveBlending,
+  BufferGeometry,
+  Float32BufferAttribute,
+  MultiplyBlending,
+} from "three";
 
 export let getBuff = ({ cloudResolution = 10, roughness = 0.5 }) => {
   const tuft1 = new CloudBufferGeo(
@@ -107,10 +114,125 @@ export function OneCloudMesh({
   );
 }
 
+export function CloudBillboard() {
+  let sprite = useTexture("/textures/cloud2.png");
+
+  let geometry = useMemo(() => {
+    let geometry = new BufferGeometry();
+    let vertices = [];
+    for (let i = 0; i < 100; i++) {
+      // let e = (100 - i) / 100;
+
+      const y = 15 * (Math.random() - 0.5);
+
+      const x = 50 * (Math.random() - 0.5);
+      const z = 50 * (Math.random() - 0.5);
+
+      vertices.push(x, y, z);
+    }
+
+    geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+
+    return geometry;
+  }, []);
+
+  // //
+  // let vs = /* glsl */ `
+
+  //   varying vec2 vUv;
+  //   void main (void) {
+  //     vUv = uv;
+
+  //     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  //     gl_PointSize = 120.0;
+  //   }
+  // `;
+  // //
+  // let fs = /* glsl */ `
+
+  //   varying vec2 vUv;
+  //   uniform sampler2D sprite;
+  //   uniform float opacity;
+
+  //   void main (void) {
+  //     vec4 color = texture2D(sprite, gl_PointCoord.xy);
+  //     if (color.a == 0.0) {
+  //       discard;
+  //     } else {
+  //       gl_FragColor = vec4(color, opacity);
+  //     }
+
+  //   }
+  // `;
+
+  return (
+    <group>
+      <group renderOrder={1}>
+        <points
+          frustumCulled={false}
+          position-x={10 + 25}
+          position-z={0}
+          geometry={geometry}
+        >
+          <pointsMaterial
+            size={20}
+            transparent={true}
+            map={sprite}
+            opacity={0.5}
+            depthWrite={false}
+          ></pointsMaterial>
+        </points>
+        <points
+          frustumCulled={false}
+          position-x={-10 - 25}
+          position-z={0}
+          geometry={geometry}
+        >
+          <pointsMaterial
+            size={20}
+            transparent={true}
+            map={sprite}
+            opacity={0.5}
+            depthWrite={false}
+          ></pointsMaterial>
+        </points>
+
+        <points
+          frustumCulled={false}
+          position-x={0}
+          position-z={10 + 25}
+          geometry={geometry}
+        >
+          <pointsMaterial
+            size={20}
+            transparent={true}
+            map={sprite}
+            opacity={0.5}
+            depthWrite={false}
+          ></pointsMaterial>
+        </points>
+        <points
+          frustumCulled={false}
+          position-x={0}
+          position-z={-10 + -25}
+          geometry={geometry}
+        >
+          <pointsMaterial
+            size={20}
+            transparent={true}
+            map={sprite}
+            opacity={0.5}
+            depthWrite={false}
+          ></pointsMaterial>
+        </points>
+      </group>
+    </group>
+  );
+}
+
 export function CloudMesh() {
   let ref = useRef();
 
-  //
   useFrame(() => {
     if (ref.current) {
       ref.current.rotation.y += -0.002;
@@ -121,6 +243,7 @@ export function CloudMesh() {
   return (
     <group>
       <directionalLight position-z={10} position-y={10}></directionalLight>
+      {/* <CloudBillboard></CloudBillboard> */}
 
       <group ref={ref}>
         <OneCloudMesh
@@ -140,6 +263,7 @@ export function CloudMesh() {
           orbitOffset={2.0 * Math.PI * 2.5 * 0.2}
           cloudResolution={6}
         ></OneCloudMesh>
+
         <OneCloudMesh
           roughness={0.3}
           floatSpeed={-1.3}
@@ -148,6 +272,7 @@ export function CloudMesh() {
           orbitOffset={2.0 * Math.PI * 2.5 * 0.3}
           cloudResolution={7}
         ></OneCloudMesh>
+
         <OneCloudMesh
           roughness={0.4}
           floatSpeed={1.3}
@@ -156,8 +281,6 @@ export function CloudMesh() {
           orbitOffset={2.0 * Math.PI * 2.5 * 0.4}
           cloudResolution={8}
         ></OneCloudMesh>
-
-        {/*  */}
       </group>
     </group>
   );

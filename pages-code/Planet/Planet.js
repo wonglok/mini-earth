@@ -22,6 +22,7 @@ import { useTools } from "../useTools/useTools";
 import { useAnimations, useFBX, useGLTF, useTexture } from "@react-three/drei";
 import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils";
 import { CloudMesh } from "../CloudMesh/CloudMesh";
+import { Mountain } from "./Mountain";
 
 //
 // import { EngineMini } from "../EngineMini/EngineMini";
@@ -94,9 +95,9 @@ function makeGeo({ seed }) {
   let SimplexNoise = require("../Noise/simplex");
   var simplex = new SimplexNoise(seed);
 
-  let radius = 6.5,
-    widthSegments = 75,
-    heightSegments = 75,
+  let radius = 40.0,
+    widthSegments = radius * 3.5,
+    heightSegments = radius * 3.5,
     phiStart = 0,
     phiLength = Math.PI * 2,
     thetaStart = 0,
@@ -111,6 +112,10 @@ function makeGeo({ seed }) {
 
   const vertex = new Vector3();
   const normal = new Vector3();
+
+  const spwan = [];
+
+  const sampler = [];
 
   // buffers
 
@@ -143,7 +148,6 @@ function makeGeo({ seed }) {
       const u = ix / widthSegments;
 
       // vertex
-
       vertex.x =
         -radius *
         Math.cos(phiStart + u * phiLength) *
@@ -160,15 +164,7 @@ function makeGeo({ seed }) {
       // normal
       normals.push(normal.x, normal.y, normal.z);
 
-      let addon =
-        1.5 +
-        ((0.5 *
-          simplex.noise3D(
-            (1 / radius) * vertex.x,
-            (1 / radius) * vertex.y,
-            (1 / radius) * vertex.z
-          )) %
-          1);
+      let addon = 1.15;
 
       let perlin = simplex.noise3D(
         addon * normal.x,
@@ -176,34 +172,56 @@ function makeGeo({ seed }) {
         addon * normal.z
       );
 
-      perlin = perlin * 0.16;
+      perlin = perlin * 2.0;
 
-      // make land flat
-      if (perlin >= 0.045) {
-        perlin = 0.045;
-      }
-
-      // make sea
-      if (perlin <= -0.04) {
-        perlin = -0.04;
-      }
-
-      perlin = perlin * radius;
+      // // make land flat
+      // if (perlin >= 0.045) {
+      //   perlin = 0.045;
+      // }
+      // // make sea
+      // if (perlin <= -0.04) {
+      //   perlin = -0.04;
+      // }
 
       altitude.push(perlin);
 
       vertices.push(vertex.x, vertex.y, vertex.z);
 
-      let perlinRay = perlin;
-      if (perlinRay <= 0) {
-        perlinRay = 0;
+      let perlinRaycasting = perlin;
+      if (perlinRaycasting <= 0) {
+        perlinRaycasting = 0;
       }
 
-      let rayPt = vertex.clone().add(normal.clone().multiplyScalar(perlinRay));
+      let rayPt = vertex
+        .clone()
+        .add(normal.clone().multiplyScalar(perlinRaycasting));
       rayData.push(rayPt.x, rayPt.y, rayPt.z);
 
       let earth = vertex.clone().add(normal.clone().multiplyScalar(perlin));
       earthVert.push(earth.x, earth.y, earth.z);
+
+      // let perlin = simplex.noise3D(
+      //   addon * normal.x,
+      //   addon * normal.y,
+      //   addon * normal.z
+      // );
+
+      let samplerEntry = perlin;
+      if (samplerEntry >= 0.5) {
+        samplerEntry = 1;
+      } else {
+        samplerEntry = 0;
+      }
+
+      sampler.push(samplerEntry);
+
+      spwan.push({
+        water: perlin <= 0.1,
+        altitude: perlin,
+        x: earth.x,
+        y: earth.y,
+        z: earth.z,
+      });
 
       // uv
       uvs.push(u + uOffset, 1 - v);
@@ -233,6 +251,7 @@ function makeGeo({ seed }) {
   let buffEarth = new BufferGeometry();
   buffEarth.setIndex(indices);
 
+  buffEarth.setAttribute("sampler", new Float32BufferAttribute(sampler, 1));
   buffEarth.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
   buffEarth.setAttribute("position", new Float32BufferAttribute(rayData, 3));
   buffEarth.setAttribute("earth", new Float32BufferAttribute(earthVert, 3));
@@ -248,7 +267,8 @@ function makeGeo({ seed }) {
   buffSea.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
 
   return {
-    hill: buffEarth,
+    spwan,
+    land: buffEarth,
     sea: buffSea,
   };
 }
@@ -261,7 +281,7 @@ function makeMat({ params }) {
   let mat = new ShaderMaterial({
     transparent: true,
     uniforms: {
-      hillColor: { value: new Color(params.hillColor) },
+      landColor: { value: new Color(params.landColor) },
       seaColor: { value: new Color(params.seaColor) },
       rock: { value: null },
     },
@@ -345,12 +365,12 @@ export function FunGeo() {
   let waternormals = useTexture("/textures/waternormals.jpg");
 
   let params = useControls({
-    hillColor: "#526c1c",
+    landColor: "#526c1c",
     seaColor: "#194665",
     seed: 1,
   });
 
-  let { hill, sea } = useMemo(() => {
+  let { spwan, land, sea } = useMemo(() => {
     return makeGeo({ seed: params.seed });
   }, [params.seed]);
 
@@ -373,6 +393,8 @@ export function FunGeo() {
     }
   }, []);
 
+  let earthRef = useRef();
+
   let tempWorldPos = new Vector3();
 
   return (
@@ -393,7 +415,12 @@ export function FunGeo() {
           );
         })}
 
+        {earthRef.current && (
+          <Mountain surfaceMesh={earthRef.current}></Mountain>
+        )}
+
         <mesh
+          ref={earthRef}
           onPointerMove={(e) => {
             fun.current.getWorldPosition(tempWorldPos);
 
@@ -418,9 +445,10 @@ export function FunGeo() {
               return [...s];
             });
           }}
-          geometry={hill}
+          geometry={land}
           material={mat}
         ></mesh>
+
         <mesh geometry={sea} rotation-x={0.6 * 0.5 * Math.PI}>
           <meshStandardMaterial
             opacity={0.9}
