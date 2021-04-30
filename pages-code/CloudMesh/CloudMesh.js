@@ -100,7 +100,7 @@ export function OneCloudMesh({
   return (
     <group ref={ref}>
       <group rotation-y={orbitOffset}>
-        <group scale={1} position-z={9}>
+        <group scale={1} position-z={60}>
           <mesh geometry={geo}>
             <meshStandardMaterial
               metalness={0.9}

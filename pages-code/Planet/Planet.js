@@ -119,12 +119,14 @@ function makeGeo({ seed }) {
   // buffers
 
   const indices = [];
-  const vertices = [];
+  const waterSurface = [];
   const earthVert = [];
   const altitude = [];
   const normals = [];
   const uvs = [];
   const rayData = [];
+
+  const hillThreshold = 1.35;
 
   // generate vertices, normals and uvs
 
@@ -177,44 +179,48 @@ function makeGeo({ seed }) {
       // if (perlin >= 0.045) {
       //   perlin = 0.045;
       // }
+
       // // make sea
       // if (perlin <= -0.04) {
       //   perlin = -0.04;
       // }
 
-      altitude.push(perlin);
+      let extra = 0;
+      for (let level = 0; level < 20; level++) {
+        if (perlin >= hillThreshold + level * 0.1) {
+          extra += perlin * 0.5;
+        }
+      }
 
-      vertices.push(vertex.x, vertex.y, vertex.z);
+      waterSurface.push(vertex.x, vertex.y, vertex.z);
+
+      let base = vertex.clone();
+
+      perlin += extra;
+
+      altitude.push(perlin);
 
       let perlinRaycasting = perlin;
       if (perlinRaycasting <= 0) {
         perlinRaycasting = 0;
       }
 
-      let rayPt = vertex
-        .clone()
-        .add(normal.clone().multiplyScalar(perlinRaycasting));
+      let rayPt = base.add(normal.clone().multiplyScalar(perlinRaycasting));
       rayData.push(rayPt.x, rayPt.y, rayPt.z);
 
       let earth = vertex.clone().add(normal.clone().multiplyScalar(perlin));
       earthVert.push(earth.x, earth.y, earth.z);
 
-      // let perlin = simplex.noise3D(
-      //   addon * normal.x,
-      //   addon * normal.y,
-      //   addon * normal.z
-      // );
-
       let samplerEntry = perlin;
-      if (samplerEntry >= 0.5) {
+      if (samplerEntry >= 0.0 && samplerEntry <= hillThreshold) {
         samplerEntry = 1;
       } else {
         samplerEntry = 0;
       }
 
       let peakEntry = perlin;
-      if (peakEntry >= 0.7) {
-        peakEntry = 1;
+      if (peakEntry >= 0.9) {
+        peakEntry = 0.9;
       } else {
         peakEntry = 0;
       }
@@ -265,11 +271,12 @@ function makeGeo({ seed }) {
   let buffSea = new BufferGeometry();
   buffSea.setIndex(indices);
 
-  buffSea.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+  buffSea.setAttribute("position", new Float32BufferAttribute(waterSurface, 3));
   buffSea.setAttribute("normal", new Float32BufferAttribute(normals, 3));
   buffSea.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
 
   return {
+    hillThreshold,
     scan: buffScan,
     land: buffEarth,
     sea: buffSea,
@@ -284,6 +291,7 @@ function makeMat({ params }) {
   let mat = new ShaderMaterial({
     transparent: true,
     uniforms: {
+      rockColor: { value: new Color(params.rockColor) },
       landColor: { value: new Color(params.landColor) },
       seaColor: { value: new Color(params.seaColor) },
       rock: { value: null },
@@ -368,12 +376,13 @@ export function FunGeo() {
   let waternormals = useTexture("/textures/waternormals.jpg");
 
   let params = useControls({
+    rockColor: "#ffffff",
     landColor: "#526c1c",
     seaColor: "#194665",
     seed: 1,
   });
 
-  let { scan, land, sea } = useMemo(() => {
+  let { scan, land, sea, hillThreshold } = useMemo(() => {
     return makeGeo({ seed: params.seed });
   }, [params.seed]);
 
@@ -400,6 +409,7 @@ export function FunGeo() {
 
   let tempWorldPos = new Vector3();
 
+  // hillThreshold
   return (
     <group>
       <mesh ref={helper}>
