@@ -17,8 +17,8 @@ export function MapCam() {
     camera.updateProjectionMatrix();
 
     let ctrls = new MapControls(camera, gl.domElement);
-    ctrls.object.position.y = 50;
-    ctrls.object.position.z = 50;
+    ctrls.object.position.y = 100;
+    ctrls.object.position.z = 150;
     ctrls.enableDamping = true;
     onLoop(() => {
       ctrls.update();

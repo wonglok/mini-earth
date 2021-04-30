@@ -234,10 +234,10 @@ export function CloudMesh() {
   let params = useControls({
     orbitSpeed: -1.3,
     floatSpeed: -1.3,
-    clouds: 0.1,
+    clouds: 0.15,
     floatAmount: 10,
     cloudScale: 1,
-    orbitRadius: 5,
+    orbitRadius: 23,
   });
 
   let cloudArr = useMemo(() => {
@@ -247,7 +247,7 @@ export function CloudMesh() {
       stuff.push({
         _id: i,
         scale: Math.random() + 1.5,
-        rand: Math.random() - 0.5,
+        rand: (Math.random() - 0.5) * 2.0,
       });
     }
 
@@ -271,16 +271,15 @@ export function CloudMesh() {
           return (
             <group key={value._id}>
               <OneCloudMesh
-                roughness={0.1}
+                cloudResolution={7 + 7 * Math.random()}
+                roughness={0.1 + 0.1 * Math.random()}
                 floatSpeed={params.floatSpeed}
                 floatSize={params.floatAmount}
                 floatOffset={idx + Math.random() * arr.length}
                 orbitRadius={
-                  params.orbitRadius * 10.0 +
-                  params.orbitRadius * 10.0 * value.rand
+                  params.orbitRadius * 3 + params.orbitRadius * value.rand
                 }
                 orbitOffset={(2.0 * Math.PI * idx) / arr.length}
-                cloudResolution={5}
                 scale={value.scale * params.cloudScale}
               ></OneCloudMesh>
             </group>
