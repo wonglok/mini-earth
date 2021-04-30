@@ -7,10 +7,12 @@ import {
   BufferGeometry,
   Color,
   Float32BufferAttribute,
+  RepeatWrapping,
   // MultiplyBlending,
   // RepeatWrapping,
   ShaderMaterial,
   TextureLoader,
+  UniformsLib,
   Vector3,
 } from "three";
 // import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
@@ -126,7 +128,20 @@ function makeGeo({ seed }) {
   const uvs = [];
   const rayData = [];
 
-  const hillThreshold = 1.35;
+  const hillThreshold = 1.3;
+
+  function mulberry32(a) {
+    return function () {
+      var t = (a += 0x6d2b79f5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // let seededRand = ;
+
+  let myRand = (v = 0) => mulberry32(v)(seed);
 
   // generate vertices, normals and uvs
 
@@ -192,9 +207,22 @@ function makeGeo({ seed }) {
         }
       }
 
+      extra += (0.3 * myRand(vertex.x)) / 3;
+      extra += (0.3 * myRand(vertex.y)) / 3;
+      extra += (0.3 * myRand(vertex.z)) / 3;
+
+      // let water = vertex.clone();
+      // water.x += myRand(water.x) * -0.8;
+      // water.y += myRand(water.y) * -0.8;
+      // water.z += myRand(water.z) * -0.8;
+
       waterSurface.push(vertex.x, vertex.y, vertex.z);
 
       let base = vertex.clone();
+
+      base.x += extra * 0.2;
+      base.y += extra * 0.2;
+      base.z += extra * 0.2;
 
       perlin += extra;
 
@@ -205,17 +233,20 @@ function makeGeo({ seed }) {
         perlinRaycasting = 0;
       }
 
-      let rayPt = base.add(normal.clone().multiplyScalar(perlinRaycasting));
+      let rayPt = base
+        .clone()
+        .add(normal.clone().multiplyScalar(perlinRaycasting));
       rayData.push(rayPt.x, rayPt.y, rayPt.z);
 
-      let earth = vertex.clone().add(normal.clone().multiplyScalar(perlin));
+      let earth = base.clone().add(normal.clone().multiplyScalar(perlin));
+
       earthVert.push(earth.x, earth.y, earth.z);
 
-      let samplerEntry = perlin;
-      if (samplerEntry >= 0.0 && samplerEntry <= hillThreshold) {
-        samplerEntry = 1;
+      let treeArea = perlin;
+      if (treeArea >= 0.0 && treeArea <= hillThreshold) {
+        treeArea = 1;
       } else {
-        samplerEntry = 0;
+        treeArea = 0;
       }
 
       let peakEntry = perlin;
@@ -225,8 +256,8 @@ function makeGeo({ seed }) {
         peakEntry = 0;
       }
 
-      sampler.push(samplerEntry);
-      peak.push(samplerEntry);
+      sampler.push(treeArea);
+      peak.push(treeArea);
 
       // uv
       uvs.push(u + uOffset, 1 - v);
@@ -289,8 +320,13 @@ function makeMat({ params }) {
   let fs = require("!raw-loader!./glsl/planet.frag").default;
 
   let mat = new ShaderMaterial({
+    extensions: {
+      GL_OES_standard_derivatives: true,
+    },
+    lights: true,
     transparent: true,
     uniforms: {
+      ...UniformsLib["lights"],
       rockColor: { value: new Color(params.rockColor) },
       landColor: { value: new Color(params.landColor) },
       seaColor: { value: new Color(params.seaColor) },
@@ -374,6 +410,11 @@ export function FunGeo() {
   camera.updateProjectionMatrix();
 
   let waternormals = useTexture("/textures/waternormals.jpg");
+  useEffect(() => {
+    waternormals.wrapS = RepeatWrapping;
+    waternormals.wrapT = RepeatWrapping;
+    waternormals.repeat.set(1.0, 1.0);
+  }, [waternormals]);
 
   let params = useControls({
     rockColor: "#ffffff",
@@ -464,7 +505,7 @@ export function FunGeo() {
           <meshStandardMaterial
             opacity={0.9}
             normalMap={waternormals}
-            metalness={0.7}
+            metalness={0.9}
             roughness={0.0}
             transparent={true}
             blending={AdditiveBlending}

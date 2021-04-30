@@ -1,15 +1,11 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CloudBufferGeo } from "./CloudBufferGeo";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils";
 import { Geometry } from "three/examples/jsm/deprecated/Geometry";
 import { useFrame } from "@react-three/fiber";
 import { Cloud, useTexture } from "@react-three/drei";
-import {
-  AdditiveBlending,
-  BufferGeometry,
-  Float32BufferAttribute,
-  MultiplyBlending,
-} from "three";
+import { BufferGeometry, Float32BufferAttribute } from "three";
+import { useControls } from "leva";
 
 export let getBuff = ({ cloudResolution = 10, roughness = 0.5 }) => {
   const tuft1 = new CloudBufferGeo(
@@ -72,6 +68,8 @@ export function OneCloudMesh({
   floatOffset = 0.0,
   orbitOffset = 0.0,
   floatSize = 5,
+  orbitRadius = 50,
+  scale = 1,
 }) {
   //
 
@@ -100,8 +98,8 @@ export function OneCloudMesh({
   return (
     <group ref={ref}>
       <group rotation-y={orbitOffset}>
-        <group scale={1} position-z={60}>
-          <mesh geometry={geo}>
+        <group position-z={orbitRadius}>
+          <mesh scale={scale} geometry={geo}>
             <meshStandardMaterial
               metalness={0.9}
               roughness={0.5}
@@ -233,9 +231,32 @@ export function CloudBillboard() {
 export function CloudMesh() {
   let ref = useRef();
 
+  let params = useControls({
+    orbitSpeed: -1.3,
+    floatSpeed: -1.3,
+    clouds: 0.1,
+    floatAmount: 10,
+    cloudScale: 1,
+    orbitRadius: 5,
+  });
+
+  let cloudArr = useMemo(() => {
+    let stuff = [];
+    let count = params.clouds * 100.0;
+    for (let i = 0; i < count; i++) {
+      stuff.push({
+        _id: i,
+        scale: Math.random() + 1.5,
+        rand: Math.random() - 0.5,
+      });
+    }
+
+    return stuff;
+  }, [params.clouds]);
+
   useFrame(() => {
     if (ref.current) {
-      ref.current.rotation.y += -0.002;
+      ref.current.rotation.y += -0.002 * params.orbitSpeed;
     }
   });
 
@@ -246,7 +267,27 @@ export function CloudMesh() {
       {/* <CloudBillboard></CloudBillboard> */}
 
       <group ref={ref}>
-        <OneCloudMesh
+        {cloudArr.map((value, idx, arr) => {
+          return (
+            <group key={value._id}>
+              <OneCloudMesh
+                roughness={0.1}
+                floatSpeed={params.floatSpeed}
+                floatSize={params.floatAmount}
+                floatOffset={idx + Math.random() * arr.length}
+                orbitRadius={
+                  params.orbitRadius * 10.0 +
+                  params.orbitRadius * 10.0 * value.rand
+                }
+                orbitOffset={(2.0 * Math.PI * idx) / arr.length}
+                cloudResolution={5}
+                scale={value.scale * params.cloudScale}
+              ></OneCloudMesh>
+            </group>
+          );
+        })}
+
+        {/* <OneCloudMesh
           roughness={0.1}
           floatSpeed={-1.3}
           floatSize={1.4}
@@ -280,7 +321,7 @@ export function CloudMesh() {
           floatOffset={0.4}
           orbitOffset={2.0 * Math.PI * 2.5 * 0.4}
           cloudResolution={8}
-        ></OneCloudMesh>
+        ></OneCloudMesh> */}
       </group>
     </group>
   );
