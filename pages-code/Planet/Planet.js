@@ -188,7 +188,7 @@ function makeGeo({ seed }) {
       let extra = 0;
       for (let level = 0; level < 20; level++) {
         if (perlin >= hillThreshold + level * 0.1) {
-          extra += perlin * 0.5;
+          extra += perlin * 0.35;
         }
       }
 
