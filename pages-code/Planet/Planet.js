@@ -113,9 +113,8 @@ function makeGeo({ seed }) {
   const vertex = new Vector3();
   const normal = new Vector3();
 
-  const spwan = [];
-
   const sampler = [];
+  const peak = [];
 
   // buffers
 
@@ -213,15 +212,15 @@ function makeGeo({ seed }) {
         samplerEntry = 0;
       }
 
-      sampler.push(samplerEntry);
+      let peakEntry = perlin;
+      if (peakEntry >= 0.7) {
+        peakEntry = 1;
+      } else {
+        peakEntry = 0;
+      }
 
-      spwan.push({
-        water: perlin <= 0.1,
-        altitude: perlin,
-        x: earth.x,
-        y: earth.y,
-        z: earth.z,
-      });
+      sampler.push(samplerEntry);
+      peak.push(samplerEntry);
 
       // uv
       uvs.push(u + uOffset, 1 - v);
@@ -247,11 +246,15 @@ function makeGeo({ seed }) {
     }
   }
 
+  let buffScan = new BufferGeometry();
+  buffScan.setAttribute("position", new Float32BufferAttribute(rayData, 3));
+  buffScan.setAttribute("peak", new Float32BufferAttribute(peak, 1));
+  buffScan.setAttribute("sampler", new Float32BufferAttribute(sampler, 1));
+
   // build geometry
   let buffEarth = new BufferGeometry();
   buffEarth.setIndex(indices);
 
-  buffEarth.setAttribute("sampler", new Float32BufferAttribute(sampler, 1));
   buffEarth.setAttribute("altitude", new Float32BufferAttribute(altitude, 1));
   buffEarth.setAttribute("position", new Float32BufferAttribute(rayData, 3));
   buffEarth.setAttribute("earth", new Float32BufferAttribute(earthVert, 3));
@@ -267,7 +270,7 @@ function makeGeo({ seed }) {
   buffSea.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
 
   return {
-    spwan,
+    scan: buffScan,
     land: buffEarth,
     sea: buffSea,
   };
@@ -370,7 +373,7 @@ export function FunGeo() {
     seed: 1,
   });
 
-  let { spwan, land, sea } = useMemo(() => {
+  let { scan, land, sea } = useMemo(() => {
     return makeGeo({ seed: params.seed });
   }, [params.seed]);
 
@@ -415,9 +418,7 @@ export function FunGeo() {
           );
         })}
 
-        {earthRef.current && (
-          <Mountain surfaceMesh={earthRef.current}></Mountain>
-        )}
+        {scan && <Mountain surfaceGeo={scan}></Mountain>}
 
         <mesh
           ref={earthRef}

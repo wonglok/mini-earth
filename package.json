@@ -15,7 +15,7 @@
     "hiccup-sdf-to-obj": "^0.0.10",
     "implicit-mesh": "^1.1.1",
     "leva": "^0.9.8",
-    "next": "10.x",
+    "next": "^10.2.0",
     "raw-loader": "^4.0.2",
     "react": "17.x",
     "react-dom": "17.x",

@@ -10,7 +10,7 @@ void main (void) {
   vec4 rockC = texture2D(rock, vUv);
   vec3 outColor = vec3(rockC.rgb);
 
-  float vA = vAltitude * 1.7;
+  float vA = vAltitude;
   if (vA < 0.0) {
     outColor = ((rockC.rgb * -vA)) * seaColor;
   } else {

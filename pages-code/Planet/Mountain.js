@@ -2,11 +2,9 @@ import { useFBX } from "@react-three/drei";
 import { useGraph } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import {
-  BufferGeometry,
   Color,
-  ConeBufferGeometry,
   InstancedMesh,
-  Matrix4,
+  Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
   Object3D,
@@ -15,7 +13,7 @@ import {
 
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
 
-export function Mountain({ surfaceMesh }) {
+export function Mountain({ surfaceGeo }) {
   const ref = useRef();
 
   const tree = useFBX("/fbx/tree.fbx");
@@ -26,6 +24,8 @@ export function Mountain({ surfaceMesh }) {
     if (!ref.current) {
       return;
     }
+
+    const surfaceMesh = new Mesh(surfaceGeo, new MeshBasicMaterial());
 
     let brownGeo = nodes.Cylinder.geometry.clone();
     brownGeo.applyMatrix4(nodes.Cylinder.matrixWorld);
@@ -47,11 +47,13 @@ export function Mountain({ surfaceMesh }) {
       metalness: 0.9,
       roughness: 0.4,
     });
+
     const sampleMaterialBrown = new MeshStandardMaterial({
       color: new Color("#845e0b").offsetHSL(0, 0.3, -0.2),
       metalness: 0.9,
       roughness: 0.4,
     });
+
     const sampler = new MeshSurfaceSampler(surfaceMesh)
       .setWeightAttribute("sampler")
       .build();
@@ -61,6 +63,7 @@ export function Mountain({ surfaceMesh }) {
       sampleMaterialBrown,
       count
     );
+
     const manyMeshGreen = new InstancedMesh(
       greenGeo,
       sampleMaterialGreen,
@@ -101,7 +104,7 @@ export function Mountain({ surfaceMesh }) {
       ref.current.remove(manyMeshGreen);
       ref.current.remove(manyMeshBrown);
     };
-  }, [surfaceMesh, surfaceMesh.geometry]);
+  }, [surfaceGeo]);
 
   return <group ref={ref}></group>;
 }
