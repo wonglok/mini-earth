@@ -1,4 +1,4 @@
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useControls } from "leva";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -21,22 +21,77 @@ import { MapCam } from "../MapCam/MapCam";
 import { useTools } from "../useTools/useTools";
 import { useAnimations, useFBX, useGLTF, useTexture } from "@react-three/drei";
 import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils";
+import { CloudMesh } from "../CloudMesh/CloudMesh";
+
+//
+// import { EngineMini } from "../EngineMini/EngineMini";
+// import { VolumeBox } from "../CloudVolume/VolumeBox";
+// import { VolumeVisualiser } from "../CloudVolume/VolumeVisualiser";
+// import { VolumeControls } from "../CloudVolume/VolumeControls";
 export function Planet() {
   return (
+    //camera={{ position: [0, 15, 15], lookAt: [0, 0, 0] }}
     <Canvas>
       <ambientLight></ambientLight>
       <Suspense fallback={null}>
         <HDR></HDR>
         <FunGeo></FunGeo>
+        <MapCam></MapCam>
+        <CloudMesh></CloudMesh>
       </Suspense>
-      <MapCam></MapCam>
       <Floor></Floor>
+      {/* <VolumetricCloud></VolumetricCloud> */}
     </Canvas>
   );
 }
 
+// function VolumetricCloud() {
+//   let mini = useRef();
+//   let volume = useRef();
+
+//   let params = useControls({
+//     threshold: 0.45,
+//     detail: 0.07,
+//   });
+//   // let volumeControls = useRef();
+//   let { gl, camera, scene } = useThree();
+//   useEffect(async () => {
+//     mini.current = new EngineMini({
+//       name: "mini",
+//       window,
+//       domElement: gl.domElement,
+//     });
+//     mini.current.set("camera", camera);
+//     mini.current.set("scene", scene);
+//     mini.current.set("renderer", gl);
+//     // volumeControls.current = new VolumeControls(mini.current);
+//     volume.current = new VolumeBox(mini.current);
+//     scene.background = new Color("#3193d5");
+//     return () => {
+//       mini.current.clean();
+//     };
+//   }, []);
+
+//   useFrame(() => {
+//     if (mini.current) {
+//       mini.current.work();
+//     }
+//     if (volume.current && volume.current.compute) {
+//       volume.current.compute();
+//     }
+//     if (volume.current && volume.current.material) {
+//       volume.current.material.uniforms.threshold.value = params.threshold;
+//       volume.current.material.uniforms.detail.value = params.detail;
+//     }
+//   });
+
+//   useEffect(() => {}, []);
+
+//   return <group></group>;
+// }
+
 function makeGeo({ seed }) {
-  let SimplexNoise = require("simplex-noise");
+  let SimplexNoise = require("../Noise/simplex");
   var simplex = new SimplexNoise(seed);
 
   let radius = 6.5,
@@ -319,6 +374,7 @@ export function FunGeo() {
   }, []);
 
   let tempWorldPos = new Vector3();
+
   return (
     <group>
       <mesh ref={helper}>

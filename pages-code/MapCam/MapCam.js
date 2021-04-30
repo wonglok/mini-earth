@@ -6,19 +6,19 @@ export function MapCam() {
   let { camera, gl, scene, waitFor, onClean, onLoop } = useTools();
   useEffect(() => {
     //
-    camera.position.copy({
-      x: 0,
-      y: 100,
-      z: -10,
-    });
+    // camera.position.copy({
+    //   x: 0,
+    //   y: 100,
+    //   z: -10,
+    // });
 
     camera.far = 100000;
     camera.near = 0.001;
     camera.updateProjectionMatrix();
 
     let ctrls = new MapControls(camera, gl.domElement);
-    ctrls.object.position.y = 10;
-    ctrls.object.position.z = 10;
+    ctrls.object.position.y = 15;
+    ctrls.object.position.z = 15;
     ctrls.enableDamping = true;
     onLoop(() => {
       ctrls.update();
@@ -27,7 +27,7 @@ export function MapCam() {
     return () => {
       ctrls.dispose();
     };
-  });
+  }, []);
 
   return null;
 }
