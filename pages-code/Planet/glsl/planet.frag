@@ -39,11 +39,12 @@ void main (void) {
 
     float hillThreshold = 1.35;
     if (vA >= hillThreshold) {
-      float hh = (vA) / hillThreshold * 0.5 + 0.1;
-      if (hh >= 1.0) {
-        hh = 1.0;
-      }
-      outColor = ((rockC.rgb)) * rockColor * hh;
+
+      // float hh = (vA) / hillThreshold * 0.5 + 0.1;
+      // if (hh >= 1.0) {
+      //   hh = 1.0;
+      // }
+      outColor = ((rockC.rgb)) * rockColor;
     }
   }
 
