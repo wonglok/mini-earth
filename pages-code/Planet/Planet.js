@@ -18,7 +18,7 @@ import {
 // import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise";
 import { Floor } from "../Floor/Floor";
 import { HDR } from "../HDR/HDR";
-import { MapCam } from "../MapCam/MapCam";
+import { OrbitCam } from "../MapCam/OrbitCam";
 // import { Water } from "three/examples/jsm/objects/Water.js";
 import { useTools } from "../useTools/useTools";
 import { useAnimations, useFBX, useGLTF, useTexture } from "@react-three/drei";
@@ -41,7 +41,7 @@ export function Planet() {
       <Suspense fallback={null}>
         <HDR></HDR>
         <FunGeo></FunGeo>
-        <MapCam></MapCam>
+        <OrbitCam></OrbitCam>
         <CloudMesh></CloudMesh>
       </Suspense>
       <Floor></Floor>
