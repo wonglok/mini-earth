@@ -1,4 +1,3 @@
-
 #include <common>
 
 varying float vAltitude;
@@ -26,7 +25,8 @@ void main (void) {
 
   float avg = (normal.x + normal.y + normal.z ) / 3.0 + 0.1;
 
-  vec4 rockC = texture2D(rock, vUv);
+  // vec4 rockC = texture2D(rock, vUv);
+  vec4 rockC = vec4(1.0);
   rockC.rgb = vec3(avg);
 
   vec3 outColor = vec3(rockC.rgb);

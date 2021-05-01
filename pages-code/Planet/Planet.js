@@ -34,7 +34,9 @@ import { Mountain } from "./Mountain";
 export function Planet() {
   return (
     //camera={{ position: [0, 15, 15], lookAt: [0, 0, 0] }}
-    <Canvas>
+    <Canvas
+      dpr={typeof devicePixelRatio !== "undefined" ? devicePixelRatio : 1.0}
+    >
       <ambientLight></ambientLight>
       <Suspense fallback={null}>
         <HDR></HDR>
@@ -98,8 +100,8 @@ function makeGeo({ seed }) {
   var simplex = new SimplexNoise(seed);
 
   let radius = 40.0,
-    widthSegments = radius * 3.5,
-    heightSegments = radius * 3.5,
+    widthSegments = 80,
+    heightSegments = 80,
     phiStart = 0,
     phiLength = Math.PI * 2,
     thetaStart = 0,
@@ -321,7 +323,7 @@ function makeMat({ params }) {
 
   let mat = new ShaderMaterial({
     extensions: {
-      GL_OES_standard_derivatives: true,
+      derivatives: true,
     },
     lights: true,
     transparent: true,
@@ -450,6 +452,20 @@ export function FunGeo() {
 
   let tempWorldPos = new Vector3();
 
+  let dekstop = {
+    onPointerMove: (e) => {
+      fun.current.getWorldPosition(tempWorldPos);
+
+      helper.current.position.copy(e.point);
+      helper.current.lookAt(tempWorldPos);
+
+      // metalman.scene.position.copy(e.point);
+      // metalman.scene.lookAt(tempWorldPos);
+    },
+  };
+  if (window.innerWidth <= 500) {
+    delete dekstop["onPointerMove"];
+  }
   // hillThreshold
   return (
     <group>
@@ -473,16 +489,8 @@ export function FunGeo() {
 
         <mesh
           ref={earthRef}
-          onPointerMove={(e) => {
-            fun.current.getWorldPosition(tempWorldPos);
-
-            helper.current.position.copy(e.point);
-            helper.current.lookAt(tempWorldPos);
-
-            // metalman.scene.position.copy(e.point);
-            // metalman.scene.lookAt(tempWorldPos);
-          }}
-          onClick={(e) => {
+          {...dekstop}
+          onPointerDown={(e) => {
             setItems((s) => {
               fun.current.getWorldPosition(tempWorldPos);
 
