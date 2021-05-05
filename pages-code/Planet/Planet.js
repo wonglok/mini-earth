@@ -21,7 +21,13 @@ import { HDR } from "../HDR/HDR";
 import { OrbitCam } from "../MapCam/OrbitCam";
 // import { Water } from "three/examples/jsm/objects/Water.js";
 import { useTools } from "../useTools/useTools";
-import { useAnimations, useFBX, useGLTF, useTexture } from "@react-three/drei";
+import {
+  Cloud,
+  useAnimations,
+  useFBX,
+  useGLTF,
+  useTexture,
+} from "@react-three/drei";
 import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils";
 import { CloudMesh } from "../CloudMesh/CloudMesh";
 import { Mountain } from "./Mountain";
@@ -422,6 +428,7 @@ export function FunGeo() {
     rockColor: "#ffffff",
     landColor: "#526c1c",
     seaColor: "#194665",
+    cloudColor: "#1b678d",
     seed: 1,
   });
 
@@ -433,6 +440,14 @@ export function FunGeo() {
     return makeMat({ params });
   }, [params]);
   let fun = useRef();
+
+  // let fun = () => {
+  //   cloudColor
+  // }
+
+  useEffect(() => {
+    scene.background = new Color(params.cloudColor);
+  }, [params.cloudColor]);
 
   useFrame(() => {
     if (fun.current) {
@@ -473,6 +488,14 @@ export function FunGeo() {
         <coneBufferGeometry args={[0.1 * 3, 0.2 * 3, 32]}></coneBufferGeometry>
         <meshNormalMaterial></meshNormalMaterial>
       </mesh>
+
+      <group scale={100}>
+        <Cloud position={[-4, -2, 0]} args={[3, 2]} />
+        <Cloud position={[-4, 2, 0]} args={[3, 2]} />
+        <Cloud args={[3, 2]} />
+        <Cloud position={[4, -2, 0]} args={[3, 2]} />
+        <Cloud position={[4, 2, 0]} args={[3, 2]} />
+      </group>
 
       <group ref={fun}>
         {items.map((i) => {
@@ -526,3 +549,13 @@ export function FunGeo() {
 }
 
 //
+/*
+
+drei
+<Cloud position={[-4, -2, 0]} args={[3, 2]} />
+<Cloud position={[-4, 2, 0]} args={[3, 2]} />
+<Cloud args={[3, 2]} />
+<Cloud position={[4, -2, 0]} args={[3, 2]} />
+<Cloud position={[4, 2, 0]} args={[3, 2]} />
+
+*/
