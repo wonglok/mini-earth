@@ -7,6 +7,7 @@ import {
   InstancedMesh,
   Mesh,
   MeshBasicMaterial,
+  MeshLambertMaterial,
   MeshStandardMaterial,
   Object3D,
   Vector3,
@@ -23,7 +24,7 @@ export function Peak({ surfaceGeo }) {
       .setWeightAttribute("peak")
       .build();
 
-    const manyMeshMat = new MeshStandardMaterial({
+    const manyMeshMat = new MeshLambertMaterial({
       color: new Color("#824f10").offsetHSL(0, 0.3, -0.2),
       metalness: 0.9,
       roughness: 0.4,
@@ -103,18 +104,14 @@ export function Mountain({ surfaceGeo }) {
     // const sampleGeometry = new ConeBufferGeometry(1, 5, 6, 1);
     // sampleGeometry.rotateX(Math.PI * -0.5);
 
-    const sampleMaterialGreen = new MeshStandardMaterial({
+    const sampleMaterialGreen = new MeshLambertMaterial({
       transparent: true,
-      color: new Color("#42692f").offsetHSL(0, 0.3, -0.2),
-      metalness: 0.9,
-      roughness: 0.4,
+      color: new Color("#42692f").offsetHSL(0, 0.7, -0.25),
     });
 
-    const sampleMaterialBrown = new MeshStandardMaterial({
+    const sampleMaterialBrown = new MeshLambertMaterial({
       transparent: true,
-      color: new Color("#845e0b").offsetHSL(0, 0.3, -0.2),
-      metalness: 0.9,
-      roughness: 0.4,
+      color: new Color("#845e0b").offsetHSL(0, 0.7, -0.25),
     });
 
     const sampler = new MeshSurfaceSampler(surfaceMesh)

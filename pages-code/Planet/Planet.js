@@ -490,11 +490,9 @@ export function FunGeo() {
       </mesh>
 
       <group scale={100}>
-        <Cloud position={[-4, -2, 0]} args={[3, 2]} />
-        <Cloud position={[-4, 2, 0]} args={[3, 2]} />
-        <Cloud args={[3, 2]} />
-        <Cloud position={[4, -2, 0]} args={[3, 2]} />
-        <Cloud position={[4, 2, 0]} args={[3, 2]} />
+        <Cloud segments={10} speed={0.4} position={[0, 0, 0]} />
+        <Cloud segments={5} speed={0.4} position={[1.5, 0, 0]} />
+        <Cloud segments={5} speed={0.4} position={[-1.5, 0, 0]} />
       </group>
 
       <group ref={fun}>
