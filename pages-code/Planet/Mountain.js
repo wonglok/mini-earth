@@ -104,12 +104,14 @@ export function Mountain({ surfaceGeo }) {
     // sampleGeometry.rotateX(Math.PI * -0.5);
 
     const sampleMaterialGreen = new MeshStandardMaterial({
+      transparent: true,
       color: new Color("#42692f").offsetHSL(0, 0.3, -0.2),
       metalness: 0.9,
       roughness: 0.4,
     });
 
     const sampleMaterialBrown = new MeshStandardMaterial({
+      transparent: true,
       color: new Color("#845e0b").offsetHSL(0, 0.3, -0.2),
       metalness: 0.9,
       roughness: 0.4,
