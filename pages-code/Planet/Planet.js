@@ -430,6 +430,7 @@ export function FunGeo() {
     seaColor: "#194665",
     cloudColor: "#1b678d",
     seed: 1,
+    cloudBG: false,
   });
 
   let { scan, land, sea, hillThreshold } = useMemo(() => {
@@ -489,11 +490,11 @@ export function FunGeo() {
         <meshNormalMaterial></meshNormalMaterial>
       </mesh>
 
-      <group scale={100}>
-        <Cloud segments={10} speed={0.4} position={[0, 0, 0]} />
-        <Cloud segments={5} speed={0.4} position={[1.5, 0, 0]} />
-        <Cloud segments={5} speed={0.4} position={[-1.5, 0, 0]} />
-      </group>
+      {params.cloudBG && (
+        <group scale={100}>
+          <Cloud segments={10} speed={0.4} position={[0, 0, -5.0]} />
+        </group>
+      )}
 
       <group ref={fun}>
         {items.map((i) => {
