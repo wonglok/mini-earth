@@ -50,7 +50,7 @@ export function Planet() {
         <OrbitCam></OrbitCam>
         <CloudMesh></CloudMesh>
       </Suspense>
-      <Floor></Floor>
+      {/* <Floor></Floor> */}
       {/* <VolumetricCloud></VolumetricCloud> */}
     </Canvas>
   );
